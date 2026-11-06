@@ -1,0 +1,35 @@
+Best of Disk #1/Additive Example #1
+Best of Disk #1/AM Example #2
+Best of Disk #1/Belly Down
+Best of Disk #1/Cheez-Verb
+Best of Disk #1/Construction
+Best of Disk #1/Delay Example #2
+Best of Disk #1/Dental Work
+Best of Disk #1/Fuzz-a-rama
+Best of Disk #1/œÄ Mutant
+Best of Disk #1/Osc Example #2
+Best of Disk #1/Osc Example #3
+Best of Disk #1/Power Bass #2
+Best of Disk #1/Psuedo Piano #2
+Best of Disk #1/Resonance Example #5
+Best of Disk #1/SIP Network
+Best of Disk #1/Stretch Example #1
+Best of Disk #1/Stretch Example #3
+Best of Disk #1/Stretch Example #4
+Best of Disk #1/Synth 10e6
+Best of Disk #2/More Big
+Best of Disk #2/Pat F
+Best of Disk #2/Turbo Talk
+Best of Disk #2/Two Kicks
+Sample Files/Amplitude Envelope Demo
+Sample Files/Delay Demo
+Sample Files/Filter Envelope Demo
+Sample Files/Mixer Demo
+Sample Files/Modulator Demo
+Sample Files/Mondo
+Sample Files/Oscillator Demo
+Sample Files/Pitch Shifter Demo
+Sample Files/Resonator Demo
+Sample Files/Spectral Inverter Demo
+Sample Files/Stretcher Demo
+Sample Files/Waveshaper Demo
