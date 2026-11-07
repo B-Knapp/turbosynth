@@ -182,9 +182,14 @@ public final class WaveshaperAudioUnit: AUAudioUnit {
         set {
             guard let p = newValue else { _currentPreset = nil; return }
             if p.number >= 0 {
-                if p.number < Curves.presets.count { setCurve(Curves.presets[p.number].curve) }
+                guard p.number < Curves.presets.count else { return }
+                setCurve(Curves.presets[p.number].curve)
                 _currentPreset = p
-            } else if let state = try? presetState(for: p) {
+            } else if userPresets.contains(where: { $0.number == p.number && $0.name == p.name }),
+                      let state = try? presetState(for: p) {
+                // presetState(for:) raises an Objective-C exception (which `try?` can't catch,
+                // so the extension dies) when the preset has no saved file, so only ask for
+                // presets that are actually saved.
                 fullStateForDocument = state
                 _currentPreset = p
             }

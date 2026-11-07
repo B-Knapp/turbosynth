@@ -105,3 +105,20 @@ func modernStraightCurveIsTransparent(_ os: Int) {
     #expect(au2.curve == Curves.presets[3].curve)
     #expect(au2.parameter(.drive)?.value == 12)
 }
+
+/// Hosts (auval, Logic) can select a user preset that has no saved file. That used to reach
+/// presetState(for:), which raises an Objective-C exception and kills the extension.
+@Test func selectingUnsavedUserPresetDoesNotCrash() throws {
+    let au = try WaveshaperAudioUnit(componentDescription: waveshaperComponentDescription)
+    au.currentPreset = au.factoryPresets?[2]
+    let before = au.curve
+    let ghost = AUAudioUnitPreset()
+    ghost.number = -42; ghost.name = "Not Saved Anywhere"
+    au.currentPreset = ghost
+    #expect(au.curve == before)
+    #expect(au.currentPreset?.number == 2)
+    let bogus = AUAudioUnitPreset()
+    bogus.number = 9999; bogus.name = "Out of range"
+    au.currentPreset = bogus
+    #expect(au.currentPreset?.number == 2)
+}
