@@ -129,7 +129,7 @@ public final class WaveshaperAudioUnit: AUAudioUnit {
         _parameterTree.implementorStringFromValueCallback = { param, valuePtr in
             let v = valuePtr?.pointee ?? param.value
             switch Param(rawValue: param.address) {
-            case .drive, .output: return String(format: "%+.1f dB", v)
+            case .drive, .output: return String(format: "%+.1f dB", abs(v) < 0.05 ? 0 : v)
             case .mix: return String(format: "%.0f%%", v)
             case .mode: return v >= 0.5 ? "Modern" : "Faithful"
             case .oversampling: return ["1x", "2x", "4x", "8x"][max(0, min(3, Int(v.rounded())))]

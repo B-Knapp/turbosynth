@@ -317,12 +317,14 @@ public final class RetroWaveshaperView: NSView {
         c.frame(b)
         // the curve
         let curve = model.curve
-        func py(_ v: Int16) -> Int { inner.y + Int((1 - (Double(v) + 32768) / 65535) * Double(inner.h - 2)) + 1 }
+        // Round, don't truncate: on a straight line the exact y lands on pixel boundaries, so
+        // truncating tiny float errors flips points by a pixel and the line wobbles.
+        func py(_ v: Double) -> Int { inner.y + 1 + Int(((32767 - v) / 65535 * Double(inner.h - 2)).rounded()) }
         var prev: (Int, Int)?
         for x in 0..<inner.w - 1 {
             let pos = Double(x) / Double(inner.w - 2) * 256
             let i = min(Int(pos), 255), t = pos - Double(i)
-            let v = Int16(Double(curve[i]) * (1 - t) + Double(curve[i + 1]) * t)
+            let v = Double(curve[i]) * (1 - t) + Double(curve[i + 1]) * t
             let p = (inner.x + x, py(v))
             if let q = prev { c.line(q.0, q.1, p.0, p.1, thick: true) }
             prev = p
@@ -331,7 +333,7 @@ public final class RetroWaveshaperView: NSView {
             for s in [-1.0, 1.0] {
                 let xx = s * level
                 let idx = max(0, min(256, Int(((xx + 1) * 128).rounded())))
-                let px = inner.x + Int((xx + 1) / 2 * Double(inner.w - 2)), pyy = py(curve[idx])
+                let px = inner.x + Int((xx + 1) / 2 * Double(inner.w - 2)), pyy = py(Double(curve[idx]))
                 c.fill(IRect(px - 2, pyy - 2, 6, 6), .black)
                 c.fill(IRect(px - 1, pyy - 1, 4, 4), .white)
             }
@@ -352,10 +354,13 @@ public final class RetroWaveshaperView: NSView {
         popup(osPopup, title: ["1x", "2x", "4x", "8x"][max(0, min(3, model.oversampling))], dimmed: dim)
         checkbox("DC Filter", dcBox, on: model.dcFilter, dimmed: dim)
         c.hline(208, 427, 137, dotted: 2)
-        slider(.drive, "Drive", value: model.drive, range: -24...36, text: String(format: "%+.1f dB", model.drive))
-        slider(.output, "Output", value: model.output, range: -36...12, text: String(format: "%+.1f dB", model.output))
+        slider(.drive, "Drive", value: model.drive, range: -24...36, text: dbText(model.drive))
+        slider(.output, "Output", value: model.output, range: -36...12, text: dbText(model.output))
         slider(.mix, "Mix", value: model.mix, range: 0...100, text: String(format: "%.0f%%", model.mix))
     }
+
+    /// "+0.0 dB" rather than "-0.0 dB" for values that round to zero.
+    private func dbText(_ v: Float) -> String { String(format: "%+.1f dB", abs(v) < 0.05 ? 0 : v) }
 
     private func popup(_ r: IRect, title: String, dimmed: Bool = false) {
         let c = canvas
