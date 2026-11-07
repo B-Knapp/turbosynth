@@ -444,7 +444,12 @@ public final class RetroWaveshaperView: NSView {
     }
 
     private func menuItem(at p: (x: Int, y: Int)) -> Int? {
-        guard let m = activeMenu, m.rect.contains(p) else { return nil }
+        guard let m = activeMenu else { return nil }
+        return menuItem(at: p, in: m)
+    }
+
+    private func menuItem(at p: (x: Int, y: Int), in m: OpenMenu) -> Int? {
+        guard m.rect.contains(p) else { return nil }
         let k = (p.y - m.rect.y - 1) / 16
         guard k >= 0, k < m.items.count, m.items[k] != nil, !m.disabled.contains(k) else { return nil }
         return k
@@ -455,8 +460,9 @@ public final class RetroWaveshaperView: NSView {
     public override func mouseDown(with e: NSEvent) {
         let p = logical(e)
         if activeMenu != nil {                                          // second click on an open menu
-            if let k = menuItem(at: p) { activeMenu?.onSelect(k) }
+            let menu = activeMenu
             activeMenu = nil; drag = nil; needsDisplay = true
+            if let menu, let k = menuItem(at: p, in: menu) { menu.onSelect(k) }
             return
         }
         if presetPopup.contains(p) {
@@ -499,7 +505,11 @@ public final class RetroWaveshaperView: NSView {
     public override func mouseDragged(with e: NSEvent) {
         let p = logical(e)
         switch drag {
-        case .menu?: activeMenu?.highlighted = menuItem(at: p)
+        case .menu?:
+            // Compute first, then assign: reading activeMenu inside its own `?.highlighted =`
+            // write is an overlapping access, which Swift traps on (the crash in Logic).
+            let k = menuItem(at: p)
+            activeMenu?.highlighted = k
         case .curve?: editCurve(p)
         case .slider(let s)?: setSlider(s, p)
         case .button(let name)?:
@@ -514,7 +524,7 @@ public final class RetroWaveshaperView: NSView {
         let p = logical(e)
         switch drag {
         case .menu?:
-            if let k = menuItem(at: p) { activeMenu?.onSelect(k); activeMenu = nil }
+            if let menu = activeMenu, let k = menuItem(at: p, in: menu) { activeMenu = nil; menu.onSelect(k) }
             else if activeMenu?.stickyAfterFirstUp == true { activeMenu?.stickyAfterFirstUp = false; activeMenu?.highlighted = nil }  // stays open
             else { activeMenu = nil }
         case .slider(let s)?: model.gesture(s, began: false)
@@ -528,7 +538,7 @@ public final class RetroWaveshaperView: NSView {
     }
 
     public override func mouseMoved(with e: NSEvent) {
-        if activeMenu != nil { activeMenu?.highlighted = menuItem(at: logical(e)); needsDisplay = true }
+        if activeMenu != nil { let k = menuItem(at: logical(e)); activeMenu?.highlighted = k; needsDisplay = true }
     }
 
     public override func updateTrackingAreas() {
