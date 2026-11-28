@@ -1,6 +1,6 @@
 #!/bin/sh
 # Build Waveshaper.vst3 (universal: Intel + Apple Silicon), sign it ad hoc for this Mac and
-# install it in ~/Library/Audio/Plug-Ins/VST3. No CMake: the few SDK sources a plugin needs
+# install it in /Library/Audio/Plug-Ins/VST3 (asks for your password). No CMake: the few SDK sources a plugin needs
 # are compiled directly. The SDK is fetched into external/vst3sdk (git-ignored) on first use.
 # Usage: vst3/build-vst3.sh             build + install
 #        vst3/build-vst3.sh --validate  also build and run Steinberg's validator on it
@@ -66,9 +66,15 @@ clang++ -arch x86_64 -arch arm64 -mmacosx-version-min=12.0 -bundle -Wl,-dead_str
     -framework Cocoa -framework CoreText -framework CoreGraphics -framework CoreFoundation
 codesign --force --sign - "$BUNDLE"
 
-DEST="$HOME/Library/Audio/Plug-Ins/VST3/Waveshaper.vst3"
-mkdir -p "$(dirname "$DEST")"
-rm -rf "$DEST" && cp -R "$BUNDLE" "$DEST"
+# system-wide folder, next to the other plugins; it's owned by root, so this step uses sudo
+DEST="/Library/Audio/Plug-Ins/VST3/Waveshaper.vst3"
+echo "installing to $DEST (sudo may ask for your password)"
+sudo mkdir -p "$(dirname "$DEST")"
+sudo rm -rf "$DEST"
+sudo cp -R "$BUNDLE" "$DEST"
+# drop the copy older builds put in the per-user folder, so hosts don't find two
+OLD="$HOME/Library/Audio/Plug-Ins/VST3/Waveshaper.vst3"
+[ -d "$OLD" ] && rm -rf "$OLD" && echo "removed old copy $OLD"
 echo "installed $DEST"
 
 if [ "$1" = "--validate" ]; then
