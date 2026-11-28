@@ -68,10 +68,18 @@ codesign --force --sign - "$BUNDLE"
 
 # system-wide folder, next to the other plugins; it's owned by root, so this step uses sudo
 DEST="/Library/Audio/Plug-Ins/VST3/Waveshaper.vst3"
-echo "installing to $DEST (sudo may ask for your password)"
-sudo mkdir -p "$(dirname "$DEST")"
-sudo rm -rf "$DEST"
-sudo cp -R "$BUNDLE" "$DEST"
+# stage outside the project first: macOS privacy rules can stop the admin process reading Desktop/Documents
+STAGE=$(mktemp -d /tmp/waveshaper-vst3.XXXXXX)
+trap 'rm -rf "$STAGE"' EXIT
+cp -R "$BUNDLE" "$STAGE/"
+INSTALL="mkdir -p '$(dirname "$DEST")' && rm -rf '$DEST' && cp -R '$STAGE/Waveshaper.vst3' '$DEST'"
+echo "installing to $DEST (asks for your password)"
+if sudo -n true 2>/dev/null || [ -t 0 ]; then
+    sudo sh -c "$INSTALL"
+else
+    # no terminal for sudo to prompt on (e.g. run from an app): use the macOS password dialog
+    osascript -e "do shell script \"$INSTALL\" with administrator privileges" >/dev/null
+fi
 # drop the copy older builds put in the per-user folder, so hosts don't find two
 OLD="$HOME/Library/Audio/Plug-Ins/VST3/Waveshaper.vst3"
 [ -d "$OLD" ] && rm -rf "$OLD" && echo "removed old copy $OLD"
