@@ -14,7 +14,7 @@
 - `vst3/source/`: `WaveshaperVST3` is a `SingleComponentEffect` (processor + controller in one): 6 parameters + bypass, mono or stereo, latency reported and `restartComponent(kLatencyChanged)` when Mode/Oversampling change, and state = parameters + curve + preset index. Class UID 5249463C-BBAB4D9E-A9AB720B-7DEBC3E7, vendor "TurboSynth", name "Waveshaper", Fx|Distortion.
 - `vst3/build-vst3.sh [--validate]`: fetches VST3 SDK v3.8.1 (MIT) into `external/vst3sdk` (git-ignored) on first run, then compiles it directly with clang (no CMake on this Mac). It builds a universal (Intel + Apple Silicon) `Waveshaper.vst3`, signs it ad hoc and installs it to `/Library/Audio/Plug-Ins/VST3` (it asks for your password: sudo in a terminal, the macOS dialog otherwise; it stages the bundle in /tmp first because the admin process can't read Desktop; and it removes any old copy in `~/Library/Audio/Plug-Ins/VST3`). `--validate` builds Steinberg's validator and runs it (47/47 pass).
 - `vst3/tests/run-hostcheck.sh`: a tiny host that opens the editor offscreen, drives it with mouse events, and checks parameters, latency, edit gestures, dirty flag, state round-trip and resizing. It also saves snapshots. Run it after `--validate`.
-- Tested in a real DAW (2026-11-27): it loads and works from /Library/Audio/Plug-Ins/VST3. (Logic can't load VST3, so that's not an option for testing.)
+- Tested in Audacity (2026-11-27): it loads and works from /Library/Audio/Plug-Ins/VST3. (Logic can't load VST3, so that's not an option for testing.)
 
 
 What's here:
