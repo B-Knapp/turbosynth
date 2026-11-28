@@ -199,8 +199,11 @@ static inline int factor_index(const WSKernel *k) {
 }
 
 int ws_latency(const WSKernel *k) {
-    int f = factor_index(k);
-    if (f == 0) return 0;
+    return ws_latency_for((int)lrintf(ws_get_param(k, WSParamMode)), (int)lrintf(ws_get_param(k, WSParamOversampling)));
+}
+
+int ws_latency_for(int mode, int oversampling) {
+    if (mode == 0 || oversampling <= 0) return 0;
     // Up and down FIRs delay (len-1)/2 high-rate samples each; the decimator takes its output
     // when the newest high-rate sample is phase factor-1, which saves factor-1 of them:
     // (len - 1 - (factor - 1)) / factor = OS_TAPS_PER_PHASE - 1 base samples, exactly.
@@ -217,10 +220,18 @@ void ws_process(WSKernel *k, const AudioBufferList *in, AudioBufferList *out, ui
     int nch = (int)out->mNumberBuffers;
     if (nch > WSMaxChannels) nch = WSMaxChannels;
     if ((int)in->mNumberBuffers < nch) nch = (int)in->mNumberBuffers;
+    const float *ins[WSMaxChannels];
+    float *outs[WSMaxChannels];
+    for (int c = 0; c < nch; c++) { ins[c] = in->mBuffers[c].mData; outs[c] = out->mBuffers[c].mData; }
+    ws_process_channels(k, ins, outs, nch, frames);
+}
+
+void ws_process_channels(WSKernel *k, const float *const *in, float *const *out, int nch, uint32_t frames) {
+    if (nch > WSMaxChannels) nch = WSMaxChannels;
 
     if (atomic_load(&k->bypass)) {
         for (int c = 0; c < nch; c++) {
-            const float *src = in->mBuffers[c].mData; float *dst = out->mBuffers[c].mData;
+            const float *src = in[c]; float *dst = out[c];
             if (src && dst && src != dst) memcpy(dst, src, frames * sizeof(float));
         }
         return;
@@ -246,8 +257,8 @@ void ws_process(WSKernel *k, const AudioBufferList *in, AudioBufferList *out, ui
 
     float driveS0 = k->driveS, outS0 = k->outS, mixS0 = k->mixS;
     for (int c = 0; c < nch; c++) {
-        const float *src = in->mBuffers[c].mData;
-        float *dst = out->mBuffers[c].mData;
+        const float *src = in[c];
+        float *dst = out[c];
         if (!src || !dst) continue;
         WSChannel *s = &k->ch[c];
         float driveS = driveS0, outS = outS0, mixS = mixS0;

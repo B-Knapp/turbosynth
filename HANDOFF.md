@@ -9,6 +9,13 @@
 - `swift test`: Faithful mode matches TurboSynthCore for all 65,536 inputs on all 10 preset curves. Other tests cover Modern transparency at every oversampling factor, alias reduction (more than 10× at 8×), Mix latency compensation, and state round-trip.
 - Component: aufx / Wshp / Tsyn, "TurboSynth: Waveshaper".
 
+**VST3 version** (same DSP, same interface), in `waveshaper/`:
+- `cpp/`: shared by the C++ formats (VST3 now, AAX later). `RetroUI.cpp` is a port of `RetroView.swift`, and it renders pixel-identical to it (checked in three states). `RetroViewMac.mm` is the NSView that shows it. `WaveshaperShared.h` holds the parameter table and the `UIHost` interface a wrapper implements. `PresetCurves.h` is generated from the Swift `Curves.presets`; regenerate it if those change. Keep `RetroUI.cpp` in step with `RetroView.swift`.
+- `vst3/source/`: `WaveshaperVST3` is a `SingleComponentEffect` (processor + controller in one): 6 parameters + bypass, mono or stereo, latency reported and `restartComponent(kLatencyChanged)` when Mode/Oversampling change, and state = parameters + curve + preset index. Class UID 5249463C-BBAB4D9E-A9AB720B-7DEBC3E7, vendor "TurboSynth", name "Waveshaper", Fx|Distortion.
+- `vst3/build-vst3.sh [--validate]`: fetches VST3 SDK v3.8.1 (MIT) into `external/vst3sdk` (git-ignored) on first run, then compiles it directly with clang (no CMake on this Mac). It builds a universal (Intel + Apple Silicon) `Waveshaper.vst3`, signs it ad hoc and installs it to `~/Library/Audio/Plug-Ins/VST3`. `--validate` builds Steinberg's validator and runs it (47/47 pass).
+- `vst3/tests/run-hostcheck.sh`: a tiny host that opens the editor offscreen, drives it with mouse events, and checks parameters, latency, edit gestures, dirty flag, state round-trip and resizing. It also saves snapshots. Run it after `--validate`.
+- Not tested in a real DAW yet; there's no VST3 host on this Mac. Logic can't load VST3.
+
 
 What's here:
 - `Turbosynth_2.0_.sit`: the original archive (source of everything in `work/`).

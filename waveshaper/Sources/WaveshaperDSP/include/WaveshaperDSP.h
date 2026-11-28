@@ -44,12 +44,16 @@ void ws_reset(WSKernel *k);
 
 /// Latency in samples for the current mode / oversampling setting.
 int ws_latency(const WSKernel *k);
+/// Latency in samples for a given Mode (0/1) and Oversampling index (0..3), without a kernel.
+int ws_latency_for(int mode, int oversampling);
 
 /// Peak input level (after Drive) since the last call, 0...1+. For the UI's level marker.
 float ws_take_input_peak(WSKernel *k);
 
 /// Process `frames` samples. in/out may alias. Real-time safe.
 void ws_process(WSKernel *k, const AudioBufferList *in, AudioBufferList *out, uint32_t frames);
+/// The same with plain per-channel pointers (VST3, AAX). in[c] and out[c] may alias.
+void ws_process_channels(WSKernel *k, const float *const *in, float *const *out, int nch, uint32_t frames);
 
 /// The TurboSynth 2.0 Waveshaper kernel (CODE 27 0x16AE) for one 16-bit sample, with the
 /// original's guard copy (point 256 := point 255). Exposed for tests.
